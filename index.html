@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FX Launcher Pro — Summon any effect in Premiere Pro. Instantly.</title>
+<meta name="description" content="A keyboard-first command palette for Adobe Premiere Pro. Fuzzy-search every effect, transition and preset. Apply with Alt+Space. Built for editors who don't have time to scroll." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Instrument+Serif:ital@0;1&family=Inter+Tight:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Deep cobalt / chrome palette pulled from the brand reference */
+    --bg: #050a16;
+    --bg-2: #0a1424;
+    --bg-3: #0f1d34;
+    --bg-4: #142847;
+    --ink: #eaf2ff;
+    --ink-dim: #8aa0c4;
+    --ink-faint: #4a5b7a;
+    --accent: #4ea8ff;
+    --accent-bright: #7ec5ff;
+    --accent-deep: #1e6dd6;
+    --chrome: #d8e4f5;
+    --line: #1a2740;
+    --line-bright: #2a3d5f;
+    --good: #6effc8;
+    --warn: #ffd24a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter Tight', sans-serif;
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    line-height: 1.5;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .serif { font-family: 'Instrument Serif', serif; }
+
+  /* ---------- NAV ---------- */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 50;
+    padding: 16px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(5,10,22,0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+  .logo-mark-img {
+    height: 32px;
+    width: auto;
+    display: block;
+    filter: drop-shadow(0 0 12px rgba(78,168,255,0.25));
+  }
+  .nav-links { display: flex; gap: 28px; align-items: center; }
+  .nav-links a {
+    color: var(--ink-dim);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--ink); }
+  .nav-cta {
+    background: linear-gradient(180deg, var(--chrome) 0%, #a8b8d4 100%);
+    color: #0a1424 !important;
+    padding: 9px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.15s;
+    box-shadow: 0 4px 14px rgba(168,184,212,0.2), inset 0 1px 0 rgba(255,255,255,0.4);
+  }
+  .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(168,184,212,0.3), inset 0 1px 0 rgba(255,255,255,0.4); }
+
+  /* ---------- HERO ---------- */
+  .hero {
+    min-height: 100vh;
+    padding: 130px 32px 80px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .hero-atmos { position: absolute; inset: 0; pointer-events: none; }
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 30%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 30%, transparent 75%);
+    opacity: 0.4;
+  }
+  .hero-glow-1 {
+    position: absolute;
+    width: 900px; height: 900px;
+    background: radial-gradient(circle, rgba(78,168,255,0.22) 0%, rgba(30,109,214,0.08) 30%, transparent 60%);
+    top: -300px; left: 50%;
+    transform: translateX(-50%);
+  }
+  .hero-glow-2 {
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(126,197,255,0.15) 0%, transparent 60%);
+    bottom: -200px; right: -100px;
+  }
+  .lens-flare {
+    position: absolute;
+    left: 0; right: 0;
+    top: 88%;
+    height: 2px;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(78,168,255,0.1) 20%,
+      rgba(126,197,255,0.6) 45%,
+      #ffffff 50%,
+      rgba(126,197,255,0.6) 55%,
+      rgba(78,168,255,0.1) 80%,
+      transparent 100%);
+    box-shadow: 0 0 30px rgba(126,197,255,0.4), 0 0 80px rgba(78,168,255,0.3);
+    opacity: 0.7;
+  }
+  .lens-flare::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 80px;
+    background: radial-gradient(ellipse, rgba(126,197,255,0.4) 0%, transparent 70%);
+    filter: blur(20px);
+  }
+
+  .hero-inner {
+    position: relative;
+    max-width: 1240px;
+    margin: 0 auto;
+    width: 100%;
+    z-index: 1;
+  }
+  .hero-flex {
+    display: flex;
+    align-items: center;
+    gap: 60px;
+    margin-bottom: 60px;
+  }
+  .hero-content { flex: 1.2; }
+  .hero-visual {
+    flex: 0.8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px 6px 8px;
+    background: rgba(15,29,52,0.6);
+    border: 1px solid var(--line-bright);
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-dim);
+    margin-bottom: 32px;
+    animation: fadeUp 0.6s 0.1s both ease-out;
+    backdrop-filter: blur(8px);
+  }
+  .badge-dot {
+    width: 6px; height: 6px;
+    background: var(--good);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--good);
+  }
+
+  .hero-lockup {
+    max-width: 320px;
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 0 40px rgba(78,168,255,0.2));
+    animation: fadeUp 0.7s 0.2s both ease-out;
+  }
+
+  h1 {
+    font-family: 'Inter Tight', sans-serif;
+    font-size: clamp(40px, 6vw, 84px);
+    font-weight: 800;
+    line-height: 0.96;
+    letter-spacing: -0.04em;
+    margin-bottom: 28px;
+    animation: fadeUp 0.7s 0.3s both ease-out;
+    background: linear-gradient(180deg, #ffffff 0%, #b8cce8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  h1 em {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-weight: 400;
+    background: linear-gradient(180deg, #7ec5ff 0%, #4ea8ff 60%, #1e6dd6 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.02em;
+  }
+  .hero-sub {
+    font-size: clamp(16px, 1.4vw, 19px);
+    color: var(--ink-dim);
+    max-width: 580px;
+    margin-bottom: 40px;
+    line-height: 1.55;
+    animation: fadeUp 0.7s 0.45s both ease-out;
+  }
+  .hero-sub strong { color: var(--ink); font-weight: 500; }
+
+  .hero-ctas {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+    animation: fadeUp 0.7s 0.6s both ease-out;
+  }
+  .btn-primary {
+    background: linear-gradient(180deg, #7ec5ff 0%, #4ea8ff 50%, #1e6dd6 100%);
+    color: #ffffff;
+    padding: 14px 22px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+    box-shadow:
+      0 0 0 1px rgba(126,197,255,0.4),
+      inset 0 1px 0 rgba(255,255,255,0.3),
+      0 8px 30px rgba(78,168,255,0.35);
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.6s;
+  }
+  .btn-primary:hover::before { left: 100%; }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 0 0 1px rgba(126,197,255,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.3),
+      0 12px 40px rgba(78,168,255,0.5);
+  }
+  .btn-primary .price {
+    font-family: 'JetBrains Mono', monospace;
+    background: rgba(0,0,0,0.25);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+  .btn-secondary {
+    color: var(--ink);
+    padding: 14px 22px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    text-decoration: none;
+    border: 1px solid var(--line-bright);
+    background: rgba(15,29,52,0.4);
+    backdrop-filter: blur(8px);
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { background: rgba(20,40,71,0.6); border-color: var(--accent); }
+
+  .hero-meta {
+    display: flex;
+    gap: 32px;
+    margin-top: 48px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    animation: fadeUp 0.7s 0.75s both ease-out;
+    flex-wrap: wrap;
+  }
+  .hero-meta span { display: flex; align-items: center; gap: 8px; }
+  .hero-meta span::before {
+    content: '';
+    width: 4px; height: 4px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 6px var(--accent);
+  }
+
+  /* ---------- COMMAND PALETTE DEMO ---------- */
+  .palette-demo {
+    width: 100%;
+    max-width: 580px;
+    animation: fadeUp 0.8s 0.9s both ease-out;
+    position: relative;
+    transform: scale(0.95);
+    transform-origin: top center;
+  }
+  .palette-demo::before {
+    content: '';
+    position: absolute;
+    inset: -60px;
+    background: radial-gradient(ellipse at center, rgba(78,168,255,0.18) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .palette {
+    background: linear-gradient(180deg, #0f1d34 0%, #0a1424 100%);
+    border: 1px solid var(--line-bright);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow:
+      inset 0 1px 0 rgba(126,197,255,0.1),
+      0 0 0 1px rgba(126,197,255,0.05),
+      0 30px 80px -20px rgba(0,0,0,0.8),
+      0 0 80px rgba(78,168,255,0.12);
+  }
+
+  .palette-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(180deg, rgba(20,40,71,0.6) 0%, transparent 100%);
+  }
+  .palette-search-icon {
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+  }
+  .palette-input {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    color: var(--ink);
+  }
+  .palette-input .typed { color: var(--ink); }
+  .palette-input .cursor {
+    display: inline-block;
+    width: 8px;
+    height: 16px;
+    background: var(--accent);
+    margin-left: 1px;
+    vertical-align: middle;
+    animation: blink 1s steps(2) infinite;
+    transform: translateY(-1px);
+    box-shadow: 0 0 8px var(--accent);
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .palette-shortcut {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-dim);
+    padding: 4px 8px;
+    border: 1px solid var(--line-bright);
+    border-radius: 5px;
+    background: var(--bg);
+  }
+
+  .palette-results { padding: 8px; }
+  .result {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+  .result:hover { background: rgba(20,40,71,0.5); }
+  .result.active {
+    background: rgba(30,109,214,0.15);
+    box-shadow: inset 0 0 0 1px rgba(78,168,255,0.3);
+  }
+  .result-icon {
+    width: 28px; height: 28px;
+    display: grid; place-items: center;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .icon-blur { background: rgba(110,255,200,0.12); color: var(--good); }
+  .icon-glow { background: rgba(255,210,74,0.12); color: var(--warn); }
+  .icon-warp { background: rgba(78,168,255,0.15); color: var(--accent-bright); }
+  .icon-color { background: rgba(120,180,255,0.12); color: #78b4ff; }
+  .icon-trans { background: rgba(220,120,255,0.12); color: #dc78ff; }
+
+  .result-name {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--ink);
+    text-align: left;
+  }
+  .result-name .highlight { color: var(--accent-bright); font-weight: 700; }
+  .result-cat {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .result-key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-dim);
+    padding: 3px 7px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+  }
+
+  .palette-footer {
+    padding: 10px 16px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+  .palette-footer-keys { display: flex; gap: 16px; }
+  .palette-footer-keys span { display: flex; align-items: center; gap: 6px; }
+  .kbd {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 2px 6px;
+    border: 1px solid var(--line-bright);
+    border-radius: 3px;
+    color: var(--ink-dim);
+    background: var(--bg);
+  }
+
+  /* Interactive States (Specific to Playground) */
+  .interactive-playground .palette-demo {
+    opacity: 0.3;
+    filter: blur(8px);
+    transform: scale(0.9);
+    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+    margin-top: 0;
+  }
+  .interactive-playground .palette-demo.is-open {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+    pointer-events: auto;
+  }
+  
+  .summons-hint {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--accent-bright);
+    background: rgba(15, 29, 52, 0.8);
+    backdrop-filter: blur(8px);
+    padding: 12px 24px;
+    border-radius: 100px;
+    border: 1px solid var(--accent);
+    box-shadow: 0 0 30px rgba(78, 168, 255, 0.3);
+    transition: opacity 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .palette-demo.is-open + .summons-hint { opacity: 0; }
+
+  .success-toast {
+    position: fixed;
+    top: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: var(--good);
+    color: #050a16;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    z-index: 200;
+    box-shadow: 0 10px 40px rgba(110, 255, 200, 0.4);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .success-toast.show { transform: translateX(-50%) translateY(0); }
+  .success-toast svg { width: 20px; height: 20px; }
+
+  /* Interactive Section */
+  .interactive-playground {
+    background: radial-gradient(circle at 50% 50%, rgba(30,109,214,0.1) 0%, transparent 70%), var(--bg);
+    padding: 100px 32px;
+    text-align: center;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .playground-container {
+    max-width: 800px;
+    margin: 40px auto 0;
+    position: relative;
+    min-height: 400px;
+    display: grid;
+    place-items: center;
+  }
+  .interactive-playground .palette-demo {
+    opacity: 0.3;
+    filter: blur(8px);
+    transform: scale(0.9);
+    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+    margin-top: 0;
+  }
+  .interactive-playground .palette-demo.is-open {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+    pointer-events: auto;
+  }
+
+  /* ---------- SECTION SHARED ---------- */
+  section { padding: 120px 32px; position: relative; }
+  .section-inner { max-width: 1200px; margin: 0 auto; }
+  .section-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-bright);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-tag::before {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent));
+  }
+  .section-title {
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    margin-bottom: 24px;
+    max-width: 800px;
+    background: linear-gradient(180deg, #ffffff 0%, #b8cce8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .section-title em {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-weight: 400;
+    background: linear-gradient(180deg, #7ec5ff 0%, #4ea8ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .section-lede {
+    color: var(--ink-dim);
+    font-size: 18px;
+    max-width: 600px;
+    line-height: 1.55;
+  }
+
+  /* ---------- PROBLEM ---------- */
+  .problem {
+    background: var(--bg-2);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    position: relative;
+  }
+  .problem::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(78,168,255,0.4), transparent);
+  }
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+    margin-top: 60px;
+  }
+  .problem-text h3 {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+    color: var(--ink);
+  }
+  .problem-text p {
+    color: var(--ink-dim);
+    font-size: 16px;
+    line-height: 1.65;
+    margin-bottom: 16px;
+  }
+  .problem-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 36px;
+  }
+  .stat {
+    border-left: 2px solid var(--accent);
+    padding-left: 16px;
+    box-shadow: -4px 0 20px -4px rgba(78,168,255,0.3);
+  }
+  .stat-num {
+    font-family: 'Instrument Serif', serif;
+    font-size: 56px;
+    line-height: 1;
+    background: linear-gradient(180deg, #ffffff 0%, #7ec5ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.04em;
+  }
+  .stat-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 8px;
+  }
+
+  .problem-visual {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 1px 0 rgba(126,197,255,0.05);
+  }
+  .effects-panel-mock { font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 2; }
+  .effects-panel-mock .folder { color: var(--ink-dim); }
+  .effects-panel-mock .folder::before { content: '▸ '; color: var(--ink-faint); }
+  .effects-panel-mock .folder.open::before { content: '▾ '; }
+  .effects-panel-mock .item { color: var(--ink-faint); padding-left: 20px; }
+  .effects-panel-mock .target {
+    color: var(--accent-bright);
+    padding-left: 20px;
+    background: rgba(78,168,255,0.1);
+    border-left: 2px solid var(--accent);
+  }
+  .scroll-indicator {
+    position: absolute;
+    right: 16px;
+    top: 24px;
+    bottom: 24px;
+    width: 4px;
+    background: var(--bg-3);
+    border-radius: 2px;
+  }
+  .scroll-indicator::after {
+    content: '';
+    position: absolute;
+    top: 60%;
+    left: 0; right: 0;
+    height: 30%;
+    background: var(--ink-faint);
+    border-radius: 2px;
+    animation: scrollDown 3s ease-in-out infinite;
+  }
+  @keyframes scrollDown {
+    0%, 100% { top: 0; }
+    50% { top: 70%; }
+  }
+
+  /* ---------- FEATURES ---------- */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--line);
+    margin-top: 80px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 60px -20px rgba(78,168,255,0.15);
+  }
+  .feature {
+    background: var(--bg);
+    padding: 36px 32px;
+    transition: background 0.3s;
+    position: relative;
+  }
+  .feature:hover { background: var(--bg-2); }
+  .feature::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 0; height: 1px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    transition: width 0.4s;
+  }
+  .feature:hover::after { width: 100%; }
+  .feature-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin-bottom: 24px;
+    letter-spacing: 0.05em;
+  }
+  .feature-icon {
+    width: 44px; height: 44px;
+    border: 1px solid var(--line-bright);
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 24px;
+    color: var(--accent-bright);
+    background: linear-gradient(180deg, rgba(20,40,71,0.6), rgba(15,29,52,0.6));
+    box-shadow: inset 0 1px 0 rgba(126,197,255,0.15);
+  }
+  .feature h3 {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    margin-bottom: 10px;
+    color: var(--ink);
+  }
+  .feature p {
+    color: var(--ink-dim);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .feature .mono { color: var(--accent-bright); }
+
+  /* ---------- WORKFLOW ---------- */
+  .workflow {
+    background: var(--bg-2);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .workflow-steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 32px;
+    margin-top: 80px;
+    position: relative;
+  }
+  .workflow-steps::before {
+    content: '';
+    position: absolute;
+    top: 24px;
+    left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--line-bright) 10%, var(--accent) 50%, var(--line-bright) 90%, transparent);
+  }
+  .step { position: relative; padding-top: 60px; }
+  .step-num {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 48px; height: 48px;
+    background: var(--bg);
+    border: 1px solid var(--line-bright);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: var(--accent-bright);
+    font-size: 14px;
+    box-shadow: 0 0 20px rgba(78,168,255,0.2), inset 0 1px 0 rgba(126,197,255,0.15);
+  }
+  .step h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .step p {
+    color: var(--ink-dim);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .step .keys {
+    margin-top: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+  .step .keys .kbd {
+    font-size: 11px;
+    color: var(--ink);
+    background: var(--bg);
+    padding: 3px 7px;
+  }
+
+  /* ---------- COMPARISON ---------- */
+  .vs-table {
+    margin-top: 80px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--bg-2);
+    box-shadow: 0 0 60px -20px rgba(78,168,255,0.1);
+  }
+  .vs-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    border-bottom: 1px solid var(--line);
+  }
+  .vs-row:last-child { border-bottom: none; }
+  .vs-row.header { background: var(--bg); }
+  .vs-cell {
+    padding: 18px 24px;
+    font-size: 14px;
+    border-right: 1px solid var(--line);
+    color: var(--ink);
+  }
+  .vs-cell:last-child { border-right: none; }
+  .vs-cell.feature-name {
+    color: var(--ink-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+  .vs-cell.us {
+    background: linear-gradient(90deg, rgba(78,168,255,0.06), rgba(78,168,255,0.02));
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .vs-cell.them { color: var(--ink-faint); }
+  .vs-row.header .vs-cell {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-dim);
+    padding: 14px 24px;
+  }
+  .vs-row.header .vs-cell.us { color: var(--accent-bright); }
+  .check { color: var(--good); }
+  .cross { color: var(--ink-faint); }
+
+  /* ---------- TESTIMONIAL ---------- */
+  .testimonial {
+    text-align: center;
+    padding: 160px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .testimonial::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 800px; height: 400px;
+    background: radial-gradient(ellipse, rgba(78,168,255,0.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .testimonial-quote {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: clamp(28px, 4vw, 48px);
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    max-width: 900px;
+    margin: 0 auto 40px;
+    position: relative;
+    background: linear-gradient(180deg, #ffffff 0%, #b8cce8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .testimonial-quote::before, .testimonial-quote::after {
+    content: '"';
+    color: var(--accent);
+    -webkit-text-fill-color: var(--accent);
+  }
+  .testimonial-author {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    position: relative;
+  }
+  .testimonial-author strong { color: var(--ink); font-weight: 500; }
+
+  /* ---------- PRICING ---------- */
+  .pricing {
+    background: var(--bg-2);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    position: relative;
+  }
+  .pricing::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(78,168,255,0.4), transparent);
+  }
+  .pricing-card {
+    margin: 80px auto 0;
+    max-width: 520px;
+    background: linear-gradient(180deg, var(--bg-3) 0%, var(--bg) 100%);
+    border: 1px solid var(--line-bright);
+    border-radius: 16px;
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+      inset 0 1px 0 rgba(126,197,255,0.1),
+      0 30px 80px -20px rgba(0,0,0,0.6),
+      0 0 60px rgba(78,168,255,0.15);
+  }
+  .pricing-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-bright), transparent);
+  }
+  .pricing-tag {
+    display: inline-block;
+    padding: 4px 10px;
+    background: rgba(78,168,255,0.12);
+    color: var(--accent-bright);
+    border: 1px solid rgba(78,168,255,0.3);
+    border-radius: 100px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 24px;
+  }
+  .pricing-name {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+    color: var(--ink);
+  }
+  .pricing-price {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .pricing-price .amount {
+    font-family: 'Instrument Serif', serif;
+    font-size: 88px;
+    font-weight: 400;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    background: linear-gradient(180deg, #ffffff 0%, #7ec5ff 70%, #1e6dd6 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .pricing-price .currency {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    color: var(--ink-dim);
+  }
+  .pricing-price .once {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-dim);
+    margin-left: 4px;
+  }
+  .pricing-note {
+    color: var(--ink-dim);
+    font-size: 14px;
+    margin-bottom: 32px;
+  }
+  .pricing-features { list-style: none; margin-bottom: 36px; }
+  .pricing-features li {
+    padding: 12px 0;
+    border-bottom: 1px dashed var(--line);
+    font-size: 14px;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .pricing-features li:last-child { border-bottom: none; }
+  .pricing-features li::before {
+    content: '+';
+    color: var(--accent-bright);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+  }
+  .pricing-cta {
+    display: block;
+    width: 100%;
+    text-align: center;
+    background: linear-gradient(180deg, #7ec5ff 0%, #4ea8ff 50%, #1e6dd6 100%);
+    color: #ffffff;
+    padding: 16px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+    box-shadow:
+      0 0 0 1px rgba(126,197,255,0.4),
+      inset 0 1px 0 rgba(255,255,255,0.3),
+      0 8px 30px rgba(78,168,255,0.35);
+    position: relative;
+    overflow: hidden;
+  }
+  .pricing-cta::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.6s;
+  }
+  .pricing-cta:hover::before { left: 100%; }
+  .pricing-cta:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 0 0 1px rgba(126,197,255,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.3),
+      0 12px 40px rgba(78,168,255,0.5);
+  }
+
+  /* ---------- FAQ ---------- */
+  .faq-list { margin-top: 60px; max-width: 800px; }
+  .faq-item {
+    border-bottom: 1px solid var(--line);
+    padding: 24px 0;
+    cursor: pointer;
+  }
+  .faq-q {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .faq-q::after {
+    content: '+';
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent-bright);
+    font-size: 24px;
+    transition: transform 0.3s;
+  }
+  .faq-item.open .faq-q::after { transform: rotate(45deg); }
+  .faq-a {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, margin 0.3s ease;
+    color: var(--ink-dim);
+    font-size: 15px;
+    line-height: 1.65;
+  }
+  .faq-item.open .faq-a { max-height: 200px; margin-top: 16px; }
+
+  /* ---------- FINAL CTA ---------- */
+  .final-cta {
+    text-align: center;
+    padding: 140px 32px;
+    background:
+      radial-gradient(ellipse at center, rgba(78,168,255,0.15) 0%, transparent 60%),
+      var(--bg);
+    border-top: 1px solid var(--line);
+    position: relative;
+    overflow: hidden;
+  }
+  .final-cta::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    top: 50%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(126,197,255,0.5), transparent);
+    box-shadow: 0 0 20px rgba(78,168,255,0.5);
+  }
+  .final-cta-inner { position: relative; }
+  .final-cta h2 {
+    font-size: clamp(40px, 6vw, 80px);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin-bottom: 24px;
+    background: linear-gradient(180deg, #ffffff 0%, #b8cce8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .final-cta h2 em {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-weight: 400;
+    background: linear-gradient(180deg, #7ec5ff 0%, #4ea8ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .final-cta p {
+    color: var(--ink-dim);
+    font-size: 18px;
+    margin-bottom: 40px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    padding: 40px 32px;
+    border-top: 1px solid var(--line);
+    background: var(--bg-2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+  .footer-mark { height: 24px; width: auto; opacity: 0.7; }
+  footer a { color: var(--ink-dim); text-decoration: none; margin-left: 24px; }
+  footer a:hover { color: var(--accent-bright); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 860px) {
+    .nav-links a:not(.nav-cta) { display: none; }
+    nav { padding: 14px 20px; }
+    .logo-mark-img { height: 26px; }
+    .hero { padding: 110px 20px 60px; }
+    .hero-flex { flex-direction: column; text-align: center; gap: 40px; }
+    .hero-visual { justify-content: center; }
+    .hero-ctas { justify-content: center; }
+    .hero-meta { justify-content: center; }
+    .hero-sub { margin-left: auto; margin-right: auto; }
+    .hero-lockup { width: 90%; }
+    .problem-grid { grid-template-columns: 1fr; gap: 40px; }
+    .features-grid { grid-template-columns: 1fr; }
+    .workflow-steps { grid-template-columns: 1fr 1fr; gap: 40px; }
+    .workflow-steps::before { display: none; }
+    .vs-row { grid-template-columns: 1.5fr 1fr 1fr; }
+    .vs-cell { padding: 14px 16px; font-size: 13px; }
+    .hero-meta { gap: 16px; font-size: 10px; }
+    .palette-input { font-size: 13px; }
+    .palette-footer-keys { gap: 10px; flex-wrap: wrap; }
+    footer { flex-direction: column; text-align: center; }
+    footer .footer-links { display: flex; flex-wrap: wrap; justify-content: center; }
+    footer a { margin: 0 12px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#"><img src="assets/fx-lockup.png" alt="FX Launcher Pro" class="logo-mark-img" /></a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#workflow">How it works</a>
+    <a href="#pricing">Pricing</a>
+    <a href="https://aescripts.com/fx-launcher-pro/" target="_blank" class="nav-cta">Buy — $49</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-atmos">
+    <div class="hero-grid"></div>
+    <div class="hero-glow-1"></div>
+    <div class="hero-glow-2"></div>
+    <div class="lens-flare"></div>
+  </div>
+
+  <div class="hero-inner">
+    <div class="hero-flex">
+      <div class="hero-content">
+
+        <h1>Stop scrolling.<br>Start <em>casting.</em></h1>
+
+        <p class="hero-sub">
+          A keyboard-first command palette for Adobe Premiere Pro. Hit <strong>Alt&nbsp;+&nbsp;Space</strong>, fuzzy-search any effect, transition or preset, and apply it to your selection. <strong>No more drilling through the Effects panel.</strong>
+        </p>
+
+        <div class="hero-ctas">
+          <a href="https://aescripts.com/fx-launcher-pro/" target="_blank" class="btn-primary">Get FX Launcher Pro <span class="price">$49</span> →</a>
+          <a href="#workflow" class="btn-secondary">See it in action</a>
+        </div>
+
+        <div class="hero-meta">
+          <span>Sold on aescripts.com</span>
+          <span>One-time purchase</span>
+          <span>Lifetime updates</span>
+          <span>Built by editors</span>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <img src="assets/fx-lockup.png" alt="FX Launcher Pro" class="hero-lockup" />
+        
+        <div class="palette-demo">
+          <div class="palette">
+            <div class="palette-header">
+              <span class="palette-search-icon mono">⌕</span>
+              <div class="palette-input">
+                <span class="typed">gauss</span><span class="cursor"></span>
+              </div>
+              <span class="palette-shortcut">ALT + SPACE</span>
+            </div>
+            <div class="palette-results">
+              <div class="result active">
+                <div class="result-icon icon-blur">G</div>
+                <div class="result-name"><span class="highlight">Gauss</span>ian Blur</div>
+                <div class="result-cat">Blur &amp; Sharpen</div>
+                <div class="result-key">↵</div>
+              </div>
+              <div class="result">
+                <div class="result-icon icon-blur">F</div>
+                <div class="result-name">Fast Blur (<span class="highlight">Gauss</span>ian)</div>
+                <div class="result-cat">Blur &amp; Sharpen</div>
+                <div class="result-key">↓</div>
+              </div>
+              <div class="result">
+                <div class="result-icon icon-glow">D</div>
+                <div class="result-name">Directional Blur</div>
+                <div class="result-cat">Blur &amp; Sharpen</div>
+                <div class="result-key">↓</div>
+              </div>
+              <div class="result">
+                <div class="result-icon icon-warp">C</div>
+                <div class="result-name">Camera Blur</div>
+                <div class="result-cat">Blur &amp; Sharpen</div>
+                <div class="result-key">↓</div>
+              </div>
+              <div class="result">
+                <div class="result-icon icon-color">L</div>
+                <div class="result-name">Lumetri Color</div>
+                <div class="result-cat">Color Correction</div>
+                <div class="result-key">↓</div>
+              </div>
+            </div>
+            <div class="palette-footer">
+              <div class="palette-footer-keys">
+                <span><span class="kbd">↑↓</span> Navigate</span>
+                <span><span class="kbd">↵</span> Apply</span>
+              </div>
+              <span>0.4 ms</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="interactive-playground" id="try-it">
+  <div class="section-inner">
+    <div class="section-tag" style="justify-content:center;">Live Playground</div>
+    <h2 class="section-title" style="margin-left:auto;margin-right:auto;">Try it for <em>yourself.</em></h2>
+    <p class="section-lede" style="margin-left:auto;margin-right:auto;">Experience the speed of the Spell Book. Hit the hotkey to summon the palette right here in your browser.</p>
+    
+    <div class="playground-container">
+      <div class="palette-demo" id="demo-palette">
+        <div class="palette">
+          <div class="palette-header">
+            <span class="palette-search-icon mono">⌕</span>
+            <div class="palette-input">
+              <span class="typed" id="demo-input"></span><span class="cursor"></span>
+            </div>
+            <span class="palette-shortcut">ALT + SPACE</span>
+          </div>
+          <div class="palette-results" id="demo-results">
+            <!-- Results injected via JS -->
+          </div>
+          <div class="palette-footer">
+            <div class="palette-footer-keys">
+              <span><span class="kbd">↑↓</span> Navigate</span>
+              <span><span class="kbd">↵</span> Apply</span>
+              <span><span class="kbd">ESC</span> Close</span>
+            </div>
+            <span id="demo-speed">0.4 ms</span>
+          </div>
+        </div>
+      </div>
+      <div class="summons-hint" id="demo-hint" style="position:absolute;cursor:pointer;pointer-events:auto;">Click to <span class="kbd" style="color:white;border-color:var(--accent);padding:4px 10px;font-size:14px;">try</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="problem">
+  <div class="section-inner">
+    <div class="section-tag">The status quo</div>
+    <h2 class="section-title">The Effects panel <em>was never</em> built for speed.</h2>
+
+    <div class="problem-grid">
+      <div class="problem-text">
+        <h3>You know exactly what you want. The panel doesn't.</h3>
+        <p>You're on a deadline. You need a Gaussian Blur. You open the Effects panel, expand <span class="mono" style="color:var(--ink)">Video Effects</span>, scroll through fourteen folders, mistype the search, lose your selection, click the wrong nested item, and break flow.</p>
+        <p>Multiply that by 80 effects per cut. Multiply that by every project. The cost adds up.</p>
+        <div class="problem-stats">
+          <div class="stat"><div class="stat-num">~6s</div><div class="stat-label">Per effect, panel-style</div></div>
+          <div class="stat"><div class="stat-num">0.4s</div><div class="stat-label">With FX Launcher Pro</div></div>
+        </div>
+      </div>
+      <div class="problem-visual">
+        <div class="effects-panel-mock">
+          <div class="folder open">Video Effects</div>
+          <div class="folder">&nbsp;&nbsp;Adjust</div>
+          <div class="folder open">&nbsp;&nbsp;Blur &amp; Sharpen</div>
+          <div class="item">&nbsp;&nbsp;&nbsp;&nbsp;Camera Blur</div>
+          <div class="item">&nbsp;&nbsp;&nbsp;&nbsp;Channel Blur</div>
+          <div class="item">&nbsp;&nbsp;&nbsp;&nbsp;Compound Blur</div>
+          <div class="item">&nbsp;&nbsp;&nbsp;&nbsp;Directional Blur</div>
+          <div class="item">&nbsp;&nbsp;&nbsp;&nbsp;Fast Blur</div>
+          <div class="target">&nbsp;&nbsp;&nbsp;&nbsp;Gaussian Blur ←</div>
+          <div class="item">&nbsp;&nbsp;&nbsp;&nbsp;Sharpen</div>
+          <div class="folder">&nbsp;&nbsp;Channel</div>
+          <div class="folder">&nbsp;&nbsp;Color Correction</div>
+          <div class="folder">&nbsp;&nbsp;Distort</div>
+          <div class="folder">&nbsp;&nbsp;Generate</div>
+          <div class="folder">&nbsp;&nbsp;Image Control</div>
+        </div>
+        <div class="scroll-indicator"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="section-inner">
+    <div class="section-tag">What's inside</div>
+    <h2 class="section-title">Built for editors who <em>type faster than they click.</em></h2>
+    <p class="section-lede">Every keystroke matters when you're cutting against the clock. FX Launcher Pro turns Premiere's effect library into a command palette that responds at the speed of thought.</p>
+
+    <div class="features-grid">
+      <div class="feature">
+        <div class="feature-num">01 / FUZZY</div>
+        <div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
+        <h3>Intelligent fuzzy search</h3>
+        <p>Type <span class="mono">"gsblr"</span> — get Gaussian Blur. Typo-tolerant, ranked by relevance, and learns from your usage. It just finds what you mean.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-num">02 / GLOBAL</div>
+        <div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 9.5V7a2 2 0 0 0-2-2h-1.5"/><path d="M3.5 5H6"/><path d="M3 9.5V12"/><path d="M3 15.5V18a2 2 0 0 0 2 2h2.5"/><path d="M15 19h3a2 2 0 0 0 2-2v-2.5"/><rect x="9" y="3" width="6" height="6" rx="1"/></svg></div>
+        <h3>Alt + Space, anywhere</h3>
+        <p>The companion <span class="mono">FX Spell Book</span> tray app gives you a true global hotkey — no need for Premiere to be focused. Summon, search, apply.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-num">03 / FAVORITES</div>
+        <div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+        <h3>Favorites that learn</h3>
+        <p>Pin the effects you live in. Recently used items float to the top automatically. Your top 5 effects are always one keystroke away.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-num">04 / PRESETS</div>
+        <div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg></div>
+        <h3>Effects, transitions, and presets</h3>
+        <p>Search across video effects, audio effects, transitions, and your custom presets — all from one palette. No tab switching.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-num">05 / NATIVE</div>
+        <div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg></div>
+        <h3>Native CEP extension</h3>
+        <p>Built on Adobe's official CEP framework. No janky scripting, no security warnings. Installs and behaves like a first-party panel.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-num">06 / FAST</div>
+        <div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+        <h3>Sub-millisecond search</h3>
+        <p>The index loads once at startup and lives in memory. Every keystroke filters in under a millisecond — even with hundreds of effects installed.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="workflow" class="workflow">
+  <div class="section-inner">
+    <div class="section-tag">In four keystrokes</div>
+    <h2 class="section-title">The new <em>workflow.</em></h2>
+    <p class="section-lede">From "I need a Gaussian Blur" to "it's on the clip" — without your hands ever leaving the keyboard.</p>
+
+    <div class="workflow-steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h4>Select your clip</h4>
+        <p>Same as always. Click, marquee, or use Premiere's selection shortcuts.</p>
+        <div class="keys">→ <span class="kbd">V</span></div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h4>Summon the palette</h4>
+        <p>One global hotkey. Premiere doesn't even need to be focused — the tray app handles the cast.</p>
+        <div class="keys">→ <span class="kbd">Alt</span> + <span class="kbd">Space</span></div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h4>Type a few characters</h4>
+        <p>Fuzzy match, ranked by recency. Three letters is usually enough to land your effect.</p>
+        <div class="keys">→ <span class="kbd">g</span><span class="kbd">s</span><span class="kbd">b</span></div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <h4>Hit enter. Done.</h4>
+        <p>Effect lands on your selection. Palette closes. Your hands stay home. Cut continues.</p>
+        <div class="keys">→ <span class="kbd">↵</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-inner">
+    <div class="section-tag">Vs. the alternatives</div>
+    <h2 class="section-title">A serious tool, <em>without</em> the serious price tag.</h2>
+    <p class="section-lede">There's one other launcher in this category. We built FX Launcher Pro to be faster, lighter, and roughly half the cost — without compromising on what matters.</p>
+
+    <div class="vs-table">
+      <div class="vs-row header">
+        <div class="vs-cell"></div>
+        <div class="vs-cell us">FX Launcher Pro</div>
+        <div class="vs-cell them">Excalibur</div>
+      </div>
+      <div class="vs-row"><div class="vs-cell feature-name">Price</div><div class="vs-cell us">$49 · one-time</div><div class="vs-cell them">$95+</div></div>
+      <div class="vs-row"><div class="vs-cell feature-name">Search Accuracy</div><div class="vs-cell us"><span class="check">✓</span> Find anything with partial typing</div><div class="vs-cell them"><span class="cross">○</span> Strict name matching only</div></div>
+      <div class="vs-row"><div class="vs-cell feature-name">Global Accessibility</div><div class="vs-cell us"><span class="check">✓</span> Works even when Premiere is unfocused</div><div class="vs-cell them"><span class="cross">○</span> Only works if panel is focused</div></div>
+      <div class="vs-row"><div class="vs-cell feature-name">Feel & Response</div><div class="vs-cell us"><span class="check">✓</span> Instant, zero-lag UI</div><div class="vs-cell them"><span class="cross">○</span> Noticeable delay on large projects</div></div>
+      <div class="vs-row"><div class="vs-cell feature-name">Future Proof</div><div class="vs-cell us"><span class="check">✓</span> All future updates included free</div><div class="vs-cell them"><span class="cross">○</span> Paid upgrades for new versions</div></div>
+      <div class="vs-row"><div class="vs-cell feature-name">Aesthetic</div><div class="vs-cell us"><span class="check">✓</span> Modern Dark 2025 design</div><div class="vs-cell them"><span class="cross">○</span> Outdated legacy UI</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="testimonial">
+  <div class="section-inner">
+    <p class="testimonial-quote">it's the first thing i install on a new machine</p>
+    <div class="testimonial-author"><strong>Faruq Ahmed</strong> · Professional Editor</div>
+  </div>
+</section>
+
+<section id="pricing" class="pricing">
+  <div class="section-inner" style="text-align:center;">
+    <div class="section-tag" style="justify-content:center;"><span style="background:var(--accent);width:24px;height:1px;margin-right:10px;"></span>Pricing<span style="background:var(--accent);width:24px;height:1px;margin-left:10px;"></span></div>
+    <h2 class="section-title" style="margin-left:auto;margin-right:auto;text-align:center;">One price. <em>Forever.</em></h2>
+    <p class="section-lede" style="margin-left:auto;margin-right:auto;text-align:center;">No subscription. No tiers. No "Pro Plus Premium." Pay once, own it, ship faster.</p>
+
+    <div class="pricing-card">
+      <span class="pricing-tag">Launch offer</span>
+      <div class="pricing-name">FX Launcher Pro</div>
+      <div class="pricing-price">
+        <span class="currency">$</span>
+        <span class="amount">49</span>
+        <span class="once">/ one-time</span>
+      </div>
+      <p class="pricing-note">Sold via aescripts.com — handles licensing, taxes, and updates.</p>
+      <ul class="pricing-features">
+        <li>FX Launcher Pro CEP extension</li>
+        <li>FX Spell Book Windows tray app</li>
+        <li>Global Alt + Space hotkey</li>
+        <li>Fuzzy search across all effects, transitions &amp; presets</li>
+        <li>Favorites &amp; recents that learn</li>
+        <li>Lifetime updates included</li>
+        <li>Email support</li>
+      </ul>
+      <a href="https://aescripts.com/fx-launcher-pro/" target="_blank" class="pricing-cta">Buy on aescripts.com →</a>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-inner">
+    <div class="section-tag">Common questions</div>
+    <h2 class="section-title">Things <em>editors ask.</em></h2>
+
+    <div class="faq-list">
+      <div class="faq-item"><div class="faq-q">Which Premiere Pro versions are supported?</div><div class="faq-a">Premiere Pro 2024 and 2025 on both Windows and macOS. CEP-based extensions install through the standard ZXP/ZIP route — instructions ship with the download.</div></div>
+      <div class="faq-item"><div class="faq-q">Do I need both the extension and the tray app?</div><div class="faq-a">The CEP extension does all the work inside Premiere. The companion tray app (FX Spell Book) is what gives you the true global Alt+Space hotkey. You can use the extension on its own, but the tray app is what makes it feel instant.</div></div>
+      <div class="faq-item"><div class="faq-q">Is the tray app available on macOS?</div><div class="faq-a">The CEP extension runs natively on both platforms. The global hotkey tray app currently ships for Windows, with macOS support coming as a free update.</div></div>
+      <div class="faq-item"><div class="faq-q">How is this different from Excalibur?</div><div class="faq-a">FX Launcher Pro uses true fuzzy search (Fuse.js), runs significantly faster on large effect libraries, ships with a system-wide hotkey via the companion tray app, and costs roughly half. See the comparison table above.</div></div>
+      <div class="faq-item"><div class="faq-q">Is it really lifetime updates?</div><div class="faq-a">Yes. One purchase, all future versions, no upgrade fees. We make money by selling to more editors, not by re-charging the ones we already serve.</div></div>
+      <div class="faq-item"><div class="faq-q">Can I try before I buy?</div><div class="faq-a">aescripts.com offers a 30-day return policy on all extensions, no questions asked. Try it on a real cut — if it doesn't earn its keep, get a full refund.</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="final-cta">
+  <div class="final-cta-inner">
+    <h2>Cut at the speed<br>of <em>thought.</em></h2>
+    <p>Stop drilling through panels. Start casting effects.</p>
+    <a href="https://aescripts.com/fx-launcher-pro/" target="_blank" class="btn-primary">Get FX Launcher Pro <span class="price">$49</span> →</a>
+  </div>
+</section>
+
+<footer>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <img src="assets/fx-mark.png" alt="FX" class="footer-mark" />
+    <span>© 2026 Developed by Mahadi · FX Launcher Pro</span>
+  </div>
+  <div class="footer-links">
+    <a href="#">Documentation</a>
+    <a href="#">Changelog</a>
+    <a href="#">Support</a>
+    <a href="#">Privacy</a>
+  </div>
+</footer>
+
+<div class="success-toast" id="success-toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+  <span>Effect successfully added!</span>
+</div>
+
+<script>
+  // FAQ Logic
+  document.querySelectorAll('.faq-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+      if (!wasOpen) item.classList.add('open');
+    });
+  });
+
+  // Interactive Demo Logic
+  const effects = [
+    { name: 'Gaussian Blur', cat: 'Blur & Sharpen', icon: 'G', type: 'blur' },
+    { name: 'Fast Blur', cat: 'Blur & Sharpen', icon: 'F', type: 'blur' },
+    { name: 'Lumetri Color', cat: 'Color Correction', icon: 'L', type: 'color' },
+    { name: 'Warp Stabilizer', cat: 'Distort', icon: 'W', type: 'warp' },
+    { name: 'Directional Blur', cat: 'Blur & Sharpen', icon: 'D', type: 'blur' },
+    { name: 'Cross Dissolve', cat: 'Transitions', icon: 'C', type: 'trans' },
+    { name: 'Dip to Black', cat: 'Transitions', icon: 'D', type: 'trans' },
+    { name: 'Levels', cat: 'Color Correction', icon: 'L', type: 'color' },
+    { name: 'Camera Blur', cat: 'Blur & Sharpen', icon: 'C', type: 'blur' }
+  ];
+
+  const palette = document.getElementById('demo-palette');
+  const inputSpan = document.getElementById('demo-input');
+  const resultsArea = document.getElementById('demo-results');
+  const speedSpan = document.getElementById('demo-speed');
+  const toast = document.getElementById('success-toast');
+  
+  let isOpen = false;
+  let query = '';
+  let selectedIndex = 0;
+  let filtered = [];
+
+  function updateResults() {
+    if (query === '') {
+      resultsArea.innerHTML = '<div style="padding: 40px 20px; text-align: center; color: var(--ink-faint); font-family: JetBrains Mono; font-size: 13px;">Type an effect name to search...</div>';
+      filtered = [];
+      return;
+    }
+
+    filtered = effects.filter(e => 
+      e.name.toLowerCase().includes(query.toLowerCase())
+    ).slice(0, 5);
+
+    if (filtered.length === 0 && query !== '') {
+      resultsArea.innerHTML = '<div style="padding: 40px 20px; text-align: center; color: var(--ink-faint); font-family: JetBrains Mono; font-size: 13px;">No results found...</div>';
+      return;
+    }
+
+    resultsArea.innerHTML = filtered.map((e, i) => `
+      <div class="result ${i === selectedIndex ? 'active' : ''}">
+        <div class="result-icon icon-${e.type}">${e.icon}</div>
+        <div class="result-name">${highlight(e.name, query)}</div>
+        <div class="result-cat">${e.cat}</div>
+        <div class="result-key">${i === selectedIndex ? '↵' : '↓'}</div>
+      </div>
+    `).join('');
+
+    speedSpan.textContent = (Math.random() * 0.5 + 0.1).toFixed(1) + ' ms';
+  }
+
+  function highlight(text, q) {
+    if (!q) return text;
+    const index = text.toLowerCase().indexOf(q.toLowerCase());
+    if (index === -1) return text;
+    return text.substring(0, index) + '<span class="highlight">' + text.substring(index, index + q.length) + '</span>' + text.substring(index + q.length);
+  }
+
+  function showToast() {
+    toast.classList.add('show');
+    // Ensure hint is hidden
+    document.getElementById('demo-hint').style.display = 'none';
+    setTimeout(() => {
+      toast.classList.remove('show');
+      // Only show hint after toast is gone and if still closed
+      setTimeout(() => {
+        if (!isOpen) {
+          document.getElementById('demo-hint').style.display = 'flex';
+          document.getElementById('demo-hint').style.opacity = '0';
+          setTimeout(() => document.getElementById('demo-hint').style.opacity = '1', 50);
+        }
+      }, 500);
+    }, 2500);
+  }
+
+  function togglePalette() {
+    isOpen = !isOpen;
+    if (isOpen) {
+      palette.classList.add('is-open');
+      document.getElementById('demo-hint').style.display = 'none';
+      query = '';
+      inputSpan.textContent = '';
+      selectedIndex = 0;
+      updateResults();
+    } else {
+      palette.classList.remove('is-open');
+      // Hint logic moved to showToast or manual close
+    }
+  }
+
+  // Click to open
+  document.getElementById('demo-hint').addEventListener('click', (e) => {
+    e.stopPropagation();
+    togglePalette();
+  });
+
+  // Click to apply result
+  resultsArea.addEventListener('click', (e) => {
+    const result = e.target.closest('.result');
+    if (result && isOpen) {
+      showToast();
+      isOpen = false;
+      palette.classList.remove('is-open');
+    }
+  });
+
+  window.addEventListener('keydown', (e) => {
+    // Alt + Space (More robust check)
+    const isAltSpace = e.altKey && (e.code === 'Space' || e.keyCode === 32);
+    
+    if (isAltSpace) {
+      e.preventDefault();
+      togglePalette();
+      if (isOpen) {
+        document.getElementById('try-it').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
+
+    if (!isOpen) return;
+
+    // Escape
+    if (e.key === 'Escape') {
+      isOpen = false;
+      palette.classList.remove('is-open');
+      return;
+    }
+
+    // Enter
+    if (e.key === 'Enter' && filtered.length > 0) {
+      showToast();
+      isOpen = false;
+      palette.classList.remove('is-open');
+      return;
+    }
+
+    // Navigation
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      selectedIndex = (selectedIndex + 1) % filtered.length;
+      updateResults();
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      selectedIndex = (selectedIndex - 1 + filtered.length) % filtered.length;
+      updateResults();
+    }
+
+    // Typing
+    if (e.key.length === 1) {
+      query += e.key;
+      inputSpan.textContent = query;
+      selectedIndex = 0;
+      updateResults();
+    }
+    if (e.key === 'Backspace') {
+      query = query.slice(0, -1);
+      inputSpan.textContent = query;
+      selectedIndex = 0;
+      updateResults();
+    }
+  });
+
+  // Initial state
+  updateResults();
+</script>
+
+</body>
+</html>
