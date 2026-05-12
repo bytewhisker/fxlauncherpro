@@ -1025,19 +1025,36 @@
     height: 1px;
     background: linear-gradient(90deg, transparent, rgba(78,168,255,0.4), transparent);
   }
-  .pricing-card {
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
     margin: 80px auto 0;
-    max-width: 520px;
+    max-width: 1080px;
+    align-items: stretch;
+  }
+  .pricing-card {
     background: linear-gradient(180deg, var(--bg-3) 0%, var(--bg) 100%);
     border: 1px solid var(--line-bright);
     border-radius: 16px;
     padding: 40px;
     position: relative;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    transition: transform 0.3s;
     box-shadow:
       inset 0 1px 0 rgba(126,197,255,0.1),
       0 30px 80px -20px rgba(0,0,0,0.6),
       0 0 60px rgba(78,168,255,0.15);
+  }
+  .pricing-card.popular {
+    border-color: var(--accent);
+    box-shadow: 
+      inset 0 1px 0 rgba(126,197,255,0.2),
+      0 0 80px rgba(78,168,255,0.25),
+      0 30px 80px -20px rgba(0,0,0,0.8);
   }
   .pricing-card::before {
     content: '';
@@ -1149,6 +1166,32 @@
       0 0 0 1px rgba(126,197,255,0.5),
       inset 0 1px 0 rgba(255,255,255,0.3),
       0 12px 40px rgba(78,168,255,0.5);
+  }
+
+  .btn-trial {
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin-top: auto;
+    padding: 16px;
+    border: 1px solid var(--line-bright);
+    border-radius: 10px;
+    color: var(--ink-dim);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+    background: rgba(15,29,52,0.4);
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .btn-trial:hover {
+    background: rgba(20,40,71,0.6);
+    border-color: var(--accent);
+    color: var(--ink);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(78,168,255,0.15);
   }
 
   /* ---------- FAQ ---------- */
@@ -1278,11 +1321,11 @@
     .hero-meta { gap: 16px; font-size: 10px; }
     .palette-input { font-size: 13px; }
     .palette-footer-keys { gap: 10px; flex-wrap: wrap; }
+    .pricing-grid { grid-template-columns: 1fr; gap: 24px; }
     footer { flex-direction: column; text-align: center; }
     footer .footer-links { display: flex; flex-wrap: wrap; justify-content: center; }
     footer a { margin: 0 12px; }
-  }
-</style>
+  }</style>
 </head>
 <body>
 
@@ -1584,25 +1627,45 @@
     <h2 class="section-title" style="margin-left:auto;margin-right:auto;text-align:center;">One price. <em>Forever.</em></h2>
     <p class="section-lede" style="margin-left:auto;margin-right:auto;text-align:center;">No subscription. No tiers. No "Pro Plus Premium." Pay once, own it, ship faster.</p>
 
-    <div class="pricing-card">
-      <span class="pricing-tag">Launch offer</span>
-      <div class="pricing-name">FX Launcher Pro</div>
-      <div class="pricing-price">
-        <span class="currency">$</span>
-        <span class="amount">39</span>
-        <span class="once">/ one-time</span>
+    <div class="pricing-grid">
+      <!-- Trial Card -->
+      <div class="pricing-card">
+        <span class="pricing-tag">Free Trial</span>
+        <div class="pricing-name">Trial Version</div>
+        <div class="pricing-price">
+          <span class="currency">$</span>
+          <span class="amount">0</span>
+          <span class="once">/ 10 days</span>
+        </div>
+        <p class="pricing-note">Full experience. No credit card required.</p>
+        <ul class="pricing-features">
+          <li>10-day full access</li>
+          <li>Fuzzy search &amp; favorites</li>
+          <li>Windows Tray App included</li>
+          <li>Limited time access</li>
+        </ul>
+        <a href="https://mdmahadi.gumroad.com/l/voyqf" target="_blank" rel="noopener noreferrer" class="btn-trial">Download Trial</a>
       </div>
-      <p class="pricing-note">Direct checkout is live now. AeScripts listing: available soon.</p>
-      <ul class="pricing-features">
-        <li>FX Launcher Pro CEP extension</li>
-        <li>FX Spell Book Windows tray app</li>
-        <li>Global Alt + Space hotkey</li>
-        <li>Fuzzy search across all effects, transitions &amp; presets</li>
-        <li>Favorites &amp; recents that learn</li>
-        <li>Lifetime updates included</li>
-        <li>Email support</li>
-      </ul>
-      <a href="https://buy.stripe.com/7sY6oH5qNdvO5ze4Veds40b" target="_blank" rel="noopener noreferrer" class="pricing-cta">Buy Now -></a>
+
+      <!-- Pro Card -->
+      <div class="pricing-card popular">
+        <span class="pricing-tag">Lifetime License</span>
+        <div class="pricing-name">FX Launcher Pro</div>
+        <div class="pricing-price">
+          <span class="currency">$</span>
+          <span class="amount">39</span>
+          <span class="once">/ one-time</span>
+        </div>
+        <p class="pricing-note">Own it forever. All features included.</p>
+        <ul class="pricing-features">
+          <li>Lifetime updates included</li>
+          <li>Premium Email support</li>
+          <li>Everything in Trial + More</li>
+          <li>Built for professional editors</li>
+        </ul>
+        <a href="https://buy.stripe.com/7sY6oH5qNdvO5ze4Veds40b" target="_blank" rel="noopener noreferrer" class="pricing-cta" style="margin-top:auto;">Get Pro Version -></a>
+      </div>
+    </div>
     </div>
   </div>
 </section>
@@ -1618,7 +1681,7 @@
       <div class="faq-item"><div class="faq-q">Is the tray app available on macOS?</div><div class="faq-a">The CEP extension runs natively on both platforms. The global hotkey tray app currently ships for Windows, with macOS support coming as a free update.</div></div>
       <div class="faq-item"><div class="faq-q">How is this different from other launchers?</div><div class="faq-a">FX Launcher Pro uses true fuzzy search (Fuse.js), stays responsive on large effect libraries, includes a system-wide hotkey via the companion tray app, and is designed for fast daily editing workflows.</div></div>
       <div class="faq-item"><div class="faq-q">Is it really lifetime updates?</div><div class="faq-a">Yes. One purchase, all future versions, no upgrade fees. We make money by selling to more editors, not by re-charging the ones we already serve.</div></div>
-      <div class="faq-item"><div class="faq-q">Can I try before I buy?</div><div class="faq-a">You can purchase via secure Stripe checkout. For pre-sales questions, reach out through support email and we will help quickly.</div></div>
+      <div class="faq-item"><div class="faq-q">Can I try before I buy?</div><div class="faq-a">Yes! We offer a 10-day free trial so you can experience the speed yourself before committing. You can download the trial version directly from the pricing section above.</div></div>
     </div>
   </div>
 </section>
